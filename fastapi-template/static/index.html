@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <title>FastAPI Message Interface</title>
+  </head>
+  <body>
+    <h1>FastAPI Message Interface</h1>
+    <input type="text" id="inputBox" placeholder="Enter text here">
+    <br><br>
+    <button id="getButton">Get</button>
+    <button id="insertButton">Insert</button>
+    <br><br>
+    <div id="getOutput">
+      <h3>Best Scoring Document:</h3>
+      <pre id="bestDoc"></pre>
+    </div>
+    <div id="insertOutput">
+      <h3>Insert Status:</h3>
+      <pre id="status"></pre>
+    </div>
+
+    <script>
+      // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
+      document.getElementById('getButton').addEventListener('click', function(){
+        fetch('/messages')
+          .then(response => response.json())
+          .then(data => {
+            // The response is of the form { "messages:": { id: { msg_id, msg_name } } }
+            const messages = data["messages:"];
+            if (!messages || Object.keys(messages).length === 0) {
+              document.getElementById('bestDoc').innerText = 'No messages available';
+              return;
+            }
+            // Convert keys to numbers and find the highest id
+            const bestId = Math.max(...Object.keys(messages).map(Number));
+            const bestMsg = messages[bestId];
+            document.getElementById('bestDoc').innerText = JSON.stringify(bestMsg, null, 2);
+          })
+          .catch(err => {
+            document.getElementById('bestDoc').innerText = 'Error: ' + err;
+          });
+      });
+
+      // "Insert" Button: Insert a large document by calling the POST /messages/{msg_name}/ endpoint.
+      document.getElementById('insertButton').addEventListener('click', function(){
+        const inputText = document.getElementById('inputBox').value;
+        if (!inputText) {
+          document.getElementById('status').innerText = 'Please enter some text.';
+          return;
+        }
+        // Create a large document by repeating the text.
+        const largeDoc = inputText.repeat(20);
+        // Call the insert endpoint (using the document as msg_name)
+        fetch(`/messages/${encodeURIComponent(largeDoc)}/`, {
+          method: 'POST'
+        })
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('status').innerText = JSON.stringify(data, null, 2);
+          })
+          .catch(err => {
+            document.getElementById('status').innerText = 'Error: ' + err;
+          });
+      });
+    </script>
+  </body>
+</html>uvicorn main:app --reload
