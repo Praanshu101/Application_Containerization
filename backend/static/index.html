@@ -19,18 +19,18 @@
     </div>
 
     <script>
+      const BACKEND_URL = "http://backend:8000"; // Ensure backend container is properly connected
+
       // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
       document.getElementById('getButton').addEventListener('click', function(){
-        fetch('/messages')
+        fetch(`${BACKEND_URL}/messages`)
           .then(response => response.json())
           .then(data => {
-            // The response is of the form { "messages:": { id: { msg_id, msg_name } } }
-            const messages = data["messages:"];
+            const messages = data["messages"]; // Remove extra colon (fix backend too)
             if (!messages || Object.keys(messages).length === 0) {
               document.getElementById('bestDoc').innerText = 'No messages available';
               return;
             }
-            // Convert keys to numbers and find the highest id
             const bestId = Math.max(...Object.keys(messages).map(Number));
             const bestMsg = messages[bestId];
             document.getElementById('bestDoc').innerText = JSON.stringify(bestMsg, null, 2);
@@ -47,10 +47,8 @@
           document.getElementById('status').innerText = 'Please enter some text.';
           return;
         }
-        // Create a large document by repeating the text.
         const largeDoc = inputText.repeat(20);
-        // Call the insert endpoint (using the document as msg_name)
-        fetch(`/messages/${encodeURIComponent(largeDoc)}/`, {
+        fetch(`${BACKEND_URL}/messages/${encodeURIComponent(largeDoc)}/`, {
           method: 'POST'
         })
           .then(response => response.json())
@@ -63,4 +61,4 @@
       });
     </script>
   </body>
-</html>uvicorn main:app --reload
+</html>
