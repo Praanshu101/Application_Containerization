@@ -19,13 +19,15 @@
     </div>
 
     <script>
-      const BACKEND_URL = "http://localhost:9567";
-      // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
+      // Remove this line or change to empty string
+      // const BACKEND_URL = "http://localhost:9567";
+      
+      // "Get" Button: Use the proxy route instead
       document.getElementById('getButton').addEventListener('click', function(){
-        fetch(`${BACKEND_URL}/messages`)
+        fetch('/get')  // Use the proxy route defined in frontend/main.py
           .then(response => response.json())
           .then(data => {
-            const messages = data["messages"]; // Remove extra colon (fix backend too)
+            const messages = data["messages"];
             if (!messages || Object.keys(messages).length === 0) {
               document.getElementById('bestDoc').innerText = 'No messages available';
               return;
@@ -39,7 +41,7 @@
           });
       });
 
-      // "Insert" Button: Insert a large document by calling the POST /messages/{msg_name}/ endpoint.
+      // "Insert" Button: Use the proxy route instead
       document.getElementById('insertButton').addEventListener('click', function(){
         const inputText = document.getElementById('inputBox').value;
         if (!inputText) {
@@ -47,7 +49,7 @@
           return;
         }
         const largeDoc = inputText.repeat(20);
-        fetch(`${BACKEND_URL}/messages/${encodeURIComponent(largeDoc)}/`, {
+        fetch(`/insert/${encodeURIComponent(largeDoc)}`, {  // Use the proxy route
           method: 'POST'
         })
           .then(response => response.json())
