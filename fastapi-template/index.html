@@ -19,6 +19,8 @@
     </div>
 
     <script>
+      const BACKEND_URL = "http://localhost:9567";
+
       // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
       document.getElementById('getButton').addEventListener('click', function(){
         fetch('/messages')

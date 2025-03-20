@@ -19,8 +19,7 @@
     </div>
 
     <script>
-      const BACKEND_URL = "http://backend:8000"; // Ensure backend container is properly connected
-
+      const BACKEND_URL = "http://localhost:9567";
       // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
       document.getElementById('getButton').addEventListener('click', function(){
         fetch(`${BACKEND_URL}/messages`)

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from elasticsearch import Elasticsearch
 from pydantic import BaseModel
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
@@ -72,6 +73,10 @@ def insert_document(doc: Document):
     new_doc = {"id": new_id, "text": doc.text}
     es.index(index=INDEX_NAME, id=new_id, body=new_doc)  
     return {"status": "Inserted", "document": new_doc}
+
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse("static/favicon.ico")
 
 # Mount the static folder for frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

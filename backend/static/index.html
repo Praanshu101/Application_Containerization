@@ -19,10 +19,11 @@
     </div>
 
     <script>
-      const BACKEND_URL = "http://backend:8000"; // Ensure backend container is properly connected
+      const BACKEND_URL = "http://localhost:9567";
 
       // "Get" Button: Retrieve all messages and display the one with the highest msg_id.
       document.getElementById('getButton').addEventListener('click', function(){
+        console.log("Requesting from:", `${BACKEND_URL}/messages`);
         fetch(`${BACKEND_URL}/messages`)
           .then(response => response.json())
           .then(data => {
@@ -48,6 +49,7 @@
           return;
         }
         const largeDoc = inputText.repeat(20);
+        console.log("Requesting from:", `${BACKEND_URL}/messages`);
         fetch(`${BACKEND_URL}/messages/${encodeURIComponent(largeDoc)}/`, {
           method: 'POST'
         })
