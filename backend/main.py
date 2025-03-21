@@ -14,7 +14,7 @@ import time
 
 ELASTICSEARCH_URL = "http://elasticsearch:9567"
 
-for _ in range(10):  # Retry up to 10 times
+for _ in range(30):  # Retry up to 10 times
     try:
         es = Elasticsearch([ELASTICSEARCH_URL])
         if es.ping():
@@ -29,7 +29,7 @@ else:
 INDEX_NAME = "documents"
 
 # Ensure the index exists
-if not es.indices.exists(index=INDEX_NAME).body:  
+if not es.indices.exists(index=INDEX_NAME):  
     es.indices.create(index=INDEX_NAME, body={
         "mappings": {
             "properties": {

@@ -1,10 +1,22 @@
-version: '3.8'
-
 networks:
   my_network:  # Define a custom network
     driver: bridge
 
 services:
+
+  elasticsearch:
+    build: ./elasticsearch
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    expose:
+      - "9567"  # Not accessible from host
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9567/_cat/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
   frontend:
     build: ./frontend
     ports:
@@ -19,16 +31,10 @@ services:
     networks:
       - my_network
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
-  elasticsearch:
-    build: ./elasticsearch
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
-    expose:
-      - "9567"  # Not accessible from host
-    networks:
-      - my_network
+
 
 volumes:
   esdata:
