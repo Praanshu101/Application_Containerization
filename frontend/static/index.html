@@ -4,11 +4,11 @@
   </head>
   <body>
     <h1>FastAPI Message Interface</h1>
-    <input type="text" id="inputBox" placeholder="Enter text here">
-    <br><br>
+    <input type="text" id="inputBox" placeholder="Enter text here" />
+    <br /><br />
     <button id="getButton">Get</button>
     <button id="insertButton">Insert</button>
-    <br><br>
+    <br /><br />
     <div id="getOutput">
       <h3>Best Scoring Document:</h3>
       <pre id="bestDoc"></pre>
@@ -21,68 +21,93 @@
     <script>
       // Add this at the top of your script section
       console.log("Frontend loaded, checking backend connection...");
-      fetch('/check-backend')
-        .then(response => response.json())
-        .then(data => console.log("Backend status:", data))
-        .catch(err => console.error("Backend check failed:", err));
-    
+      fetch("/check-backend")
+        .then((response) => response.json())
+        .then((data) => console.log("Backend status:", data))
+        .catch((err) => console.error("Backend check failed:", err));
+
       // "Get" Button: Use the /get endpoint which accepts a query parameter
-      document.getElementById('getButton').addEventListener('click', function(){
-        const query = document.getElementById('inputBox').value;
-        const url = query ? `/get?query=${encodeURIComponent(query)}` : '/get';  // Make query optional
-        
-        console.log("Fetching from:", url);  // Debug which URL we're using
-        
-        fetch(url)
-          .then(response => response.json())
-          .then(data => {
-            console.log("Received data:", data); // Debug what we received
-            
-            // Check if we have messages in the correct format
-            const messages = data.messages || {};
-            const messageKeys = Object.keys(messages);
-            
-            if (messageKeys.length === 0) {
-              document.getElementById('bestDoc').innerText = 'No messages available';
-              return;
-            }
-            
-            // Get the first message (backend should be returning the best match)
-            const firstKey = messageKeys[0];
-            const bestMsg = messages[firstKey];
-            
-            if (bestMsg) {
-              document.getElementById('bestDoc').innerText = 
-                `Best document (ID: ${bestMsg.msg_id}):\n\n${bestMsg.msg_name}`;
-            } else {
-              document.getElementById('bestDoc').innerText = 'Error retrieving document';
-            }
-          })
-          .catch(err => {
-            console.error("Fetch error:", err);
-            document.getElementById('bestDoc').innerText = 'Error fetching data';
-          });
-      });
+      document
+        .getElementById("getButton")
+        .addEventListener("click", function () {
+          const query = document.getElementById("inputBox").value;
+          const url = query
+            ? `/get?query=${encodeURIComponent(query)}`
+            : "/get"; // Make query optional
+
+          console.log("Fetching from:", url); // Debug which URL we're using
+
+          fetch(url)
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Received data:", data); // Debug what we received
+
+              // Check if we have messages in the correct format
+              const messages = data.messages || {};
+              const messageKeys = Object.keys(messages);
+
+              if (messageKeys.length === 0) {
+                document.getElementById("bestDoc").innerText =
+                  "No messages available";
+                return;
+              }
+
+              // Sort messages by ID for consistent display
+              // Convert string IDs to numbers when sorting
+              messageKeys.sort((a, b) => {
+                const msgA = messages[a];
+                const msgB = messages[b];
+                // Sort by score descending (higher scores first)
+                return (msgB.score || 0) - (msgA.score || 0);
+              });
+
+              // Format all messages nicely
+              let output = "All Documents (in order of ID):\n\n";
+
+              messageKeys.forEach((key, index) => {
+                const msg = messages[key];
+                output += `Document #${index + 1}:\n`;
+                output += `ID: ${msg.msg_id}\n`;
+                output += `Content: ${msg.msg_name}\n\n`;
+                output += "------------------------------------------\n\n";
+              });
+
+              document.getElementById("bestDoc").innerText = output;
+            })
+            .catch((err) => {
+              console.error("Fetch error:", err);
+              document.getElementById("bestDoc").innerText =
+                "Error fetching data";
+            });
+        });
 
       // "Insert" Button: Use the proxy route instead
-      document.getElementById('insertButton').addEventListener('click', function(){
-        const inputText = document.getElementById('inputBox').value;
-        if (!inputText) {
-          document.getElementById('status').innerText = 'Please enter some text.';
-          return;
-        }
-        const largeDoc = inputText.repeat(20);
-        fetch(`/insert/${encodeURIComponent(largeDoc)}`, {  // Use the proxy route
-          method: 'POST'
-        })
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById('status').innerText = JSON.stringify(data, null, 2);
+      document
+        .getElementById("insertButton")
+        .addEventListener("click", function () {
+          const inputText = document.getElementById("inputBox").value;
+          if (!inputText) {
+            document.getElementById("status").innerText =
+              "Please enter some text.";
+            return;
+          }
+          const largeDoc = inputText.repeat(20);
+          fetch(`/insert/${encodeURIComponent(largeDoc)}`, {
+            // Use the proxy route
+            method: "POST",
           })
-          .catch(err => {
-            document.getElementById('status').innerText = 'Error: ' + err;
-          });
-      });
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById("status").innerText = JSON.stringify(
+                data,
+                null,
+                2
+              );
+            })
+            .catch((err) => {
+              document.getElementById("status").innerText = "Error: " + err;
+            });
+        });
     </script>
   </body>
 </html>

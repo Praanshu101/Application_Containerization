@@ -19,7 +19,7 @@ BACKEND_URL = "http://backend:9567"
 
 # Route for retrieving the best-scoring document
 @app.get("/get")
-def get_best_document(query:  str=""):
+def get_best_document(query: Optional[str] = None):
     try:
         # Pass query parameter to backend if it exists
         if query:
@@ -33,7 +33,7 @@ def get_best_document(query:  str=""):
         data = response.json()
         
         # Add debugging to see the actual response
-        print(f"Backend response: {data}")
+        print(f"Backend response contains {len(data.get('messages', {}))} documents")
         
         # Return directly to ensure proper structure
         return data

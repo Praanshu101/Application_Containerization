@@ -143,20 +143,26 @@ def get_documents(query: Optional[str] = None):
                 "query": {"match_all": {}}
             }
             
-        # Execute search
-        result = es.search(index=INDEX_NAME, body=search_body)
+        # Execute search and get all matching documents
+        result = es.search(index=INDEX_NAME, body=search_body, size=100)  # Get up to 100 docs
         
         # Format results
         messages = {}
         for hit in result["hits"]["hits"]:
             doc = hit["_source"]
             doc_id = doc.get("id", hit["_id"])
+            score = hit["_score"]
+            
             try:
                 msg_id = int(doc_id)
             except ValueError:
                 msg_id = doc_id  # Keep as string if can't convert
                 
-            messages[doc_id] = {"msg_id": msg_id, "msg_name": doc["text"]}
+            messages[doc_id] = {
+                "msg_id": msg_id, 
+                "msg_name": doc["text"],
+                "score": score
+            }
         
         # Debugging
         print(f"Returning {len(messages)} documents for query: {query or 'None'}")
