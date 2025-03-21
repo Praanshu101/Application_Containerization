@@ -57,23 +57,39 @@ class Document(BaseModel):
 @app.get("/messages")
 def get_messages():
     """Return all documents to match frontend expectations"""
-    result = es.search(index=INDEX_NAME, body={
-        "query": {"match_all": {}}
-    })
-    
-    messages = {}
-    for hit in result["hits"]["hits"]:
-        doc = hit["_source"]
-        messages[doc["id"]] = {"msg_id": int(doc["id"]), "msg_name": doc["text"]}
-    
-    return {"messages": messages}
+    try:
+        result = es.search(index=INDEX_NAME, body={
+            "query": {"match_all": {}}
+        })
+        
+        messages = {}
+        for hit in result["hits"]["hits"]:
+            doc = hit["_source"]
+            # Use get() with fallback to avoid KeyError
+            doc_id = doc.get("id", hit["_id"])
+            try:
+                # Convert to int safely
+                msg_id = int(doc_id)
+            except ValueError:
+                # Fallback if ID can't be converted to int
+                msg_id = 0
+                
+            messages[doc_id] = {"msg_id": msg_id, "msg_name": doc["text"]}
+        
+        # Debugging - log what we're returning
+        print(f"Returning messages: {messages}")
+        return {"messages": messages}
+    except Exception as e:
+        # Log the error and return empty result
+        print(f"Error in get_messages: {str(e)}")
+        return {"messages": {}, "error": str(e)}
 
 @app.post("/messages/{text}/")
 def add_message(text: str):
     """Insert a message from URL path parameter to match frontend expectations"""
-    new_id = str(es.count(index=INDEX_NAME)["count"] + 1)
+    result = es.index(index=INDEX_NAME, body={"text": text})
+    new_id = result["_id"]
     new_doc = {"id": new_id, "text": text}
-    es.index(index=INDEX_NAME, id=new_id, body=new_doc)
     return {"status": "Inserted", "document": new_doc}
 
 
@@ -85,7 +101,15 @@ def search(query: str):
             "match": {"text": query}
         }
     })
-    return result["hits"]["hits"]
+    
+    # Format the response to match frontend expectations
+    messages = {}
+    for hit in result["hits"]["hits"]:
+        doc = hit["_source"]
+        doc_id = doc.get("id", hit["_id"])
+        messages[doc_id] = {"msg_id": int(doc_id), "msg_name": doc["text"]}
+    
+    return {"messages": messages}
 
 
 @app.post("/insert/")
@@ -99,6 +123,52 @@ def insert_document(doc: Document):
 @app.get("/favicon.ico")
 def favicon():
     return FileResponse("static/favicon.ico")
+
+@app.get("/get")
+def get_documents():
+    """Mirror of the messages endpoint to handle frontend requests"""
+    try:
+        result = es.search(index=INDEX_NAME, body={
+            "query": {"match_all": {}}
+        })
+        
+        messages = {}
+        for hit in result["hits"]["hits"]:
+            doc = hit["_source"]
+            # Use get() with fallback to avoid KeyError
+            doc_id = doc.get("id", hit["_id"])
+            try:
+                # Convert to int safely
+                msg_id = int(doc_id)
+            except ValueError:
+                # Fallback if ID can't be converted to int
+                msg_id = 0
+                
+            messages[doc_id] = {"msg_id": msg_id, "msg_name": doc["text"]}
+        
+        # Debugging - log what we're returning
+        print(f"Returning messages from /get endpoint: {messages}")
+        return {"messages": messages}
+    except Exception as e:
+        # Log the error and return empty result
+        print(f"Error in get_documents: {str(e)}")
+        return {"messages": {}, "error": str(e)}
+
+@app.get("/es-status")
+def es_status():
+    """Check Elasticsearch connection status"""
+    try:
+        health = es.cluster.health()
+        indices = es.cat.indices(format="json")
+        doc_count = es.count(index=INDEX_NAME)
+        return {
+            "status": "connected",
+            "health": health,
+            "indices": indices,
+            "document_count": doc_count
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 # Mount the static folder for frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
