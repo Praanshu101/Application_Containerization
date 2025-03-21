@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 import requests
+from typing import Optional
 
 app = FastAPI()
 
@@ -18,10 +19,16 @@ BACKEND_URL = "http://backend:9567"
 
 # Route for retrieving the best-scoring document
 @app.get("/get")
-def get_best_document():
+def get_best_document(query:  str=""):
     try:
-        # Try the direct messages endpoint first
-        response = requests.get(f"{BACKEND_URL}/get")  # Use backend's /get endpoint
+        # Pass query parameter to backend if it exists
+        if query:
+            print(f"Sending query to backend: '{query}'")
+            response = requests.get(f"{BACKEND_URL}/get?query={query}")
+        else:
+            print("No query parameter, sending request without query")
+            response = requests.get(f"{BACKEND_URL}/get")
+            
         response.raise_for_status()
         data = response.json()
         

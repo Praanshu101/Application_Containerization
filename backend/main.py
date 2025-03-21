@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from elasticsearch import Elasticsearch
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
+from typing import Optional
 
 app = FastAPI()
 
@@ -125,32 +126,42 @@ def favicon():
     return FileResponse("static/favicon.ico")
 
 @app.get("/get")
-def get_documents():
-    """Mirror of the messages endpoint to handle frontend requests"""
+def get_documents(query: Optional[str] = None):
+    """Return documents matching query or all if no query provided"""
     try:
-        result = es.search(index=INDEX_NAME, body={
-            "query": {"match_all": {}}
-        })
+        # Use query if provided, otherwise match_all
+        if query:
+            print(f"Searching for query: '{query}'")
+            search_body = {
+                "query": {
+                    "match": {"text": query}
+                }
+            }
+        else:
+            print("No query provided, returning all documents")
+            search_body = {
+                "query": {"match_all": {}}
+            }
+            
+        # Execute search
+        result = es.search(index=INDEX_NAME, body=search_body)
         
+        # Format results
         messages = {}
         for hit in result["hits"]["hits"]:
             doc = hit["_source"]
-            # Use get() with fallback to avoid KeyError
             doc_id = doc.get("id", hit["_id"])
             try:
-                # Convert to int safely
                 msg_id = int(doc_id)
             except ValueError:
-                # Fallback if ID can't be converted to int
-                msg_id = 0
+                msg_id = doc_id  # Keep as string if can't convert
                 
             messages[doc_id] = {"msg_id": msg_id, "msg_name": doc["text"]}
         
-        # Debugging - log what we're returning
-        print(f"Returning messages from /get endpoint: {messages}")
+        # Debugging
+        print(f"Returning {len(messages)} documents for query: {query or 'None'}")
         return {"messages": messages}
     except Exception as e:
-        # Log the error and return empty result
         print(f"Error in get_documents: {str(e)}")
         return {"messages": {}, "error": str(e)}
 

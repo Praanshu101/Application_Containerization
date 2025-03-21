@@ -25,77 +25,42 @@
         .then(response => response.json())
         .then(data => console.log("Backend status:", data))
         .catch(err => console.error("Backend check failed:", err));
-
-      // Remove this line or change to empty string
-      // const BACKEND_URL = "http://localhost:9567";
-      
-      // "Get" Button: Use the proxy route instead
+    
+      // "Get" Button: Use the /get endpoint which accepts a query parameter
       document.getElementById('getButton').addEventListener('click', function(){
-        fetch('/get')
+        const query = document.getElementById('inputBox').value;
+        const url = query ? `/get?query=${encodeURIComponent(query)}` : '/get';  // Make query optional
+        
+        console.log("Fetching from:", url);  // Debug which URL we're using
+        
+        fetch(url)
           .then(response => response.json())
           .then(data => {
             console.log("Received data:", data); // Debug what we received
             
+            // Check if we have messages in the correct format
             const messages = data.messages || {};
-            if (!messages || Object.keys(messages).length === 0) {
+            const messageKeys = Object.keys(messages);
+            
+            if (messageKeys.length === 0) {
               document.getElementById('bestDoc').innerText = 'No messages available';
               return;
             }
             
-            try {
-              const messageKeys = Object.keys(messages);
-              console.log("Message keys:", messageKeys); 
-              console.log("Full messages object:", messages);
-              
-              // Add special handling if keys aren't numeric
-              if (messageKeys.length > 0) {
-                // Check if keys can be converted to numbers
-                const numericKeys = messageKeys.filter(key => !isNaN(Number(key)));
-                console.log("Numeric keys:", numericKeys);
-                
-                if (numericKeys.length > 0) {
-                  // Instead of using Math.min, find the message with the most content
-                  let bestId = numericKeys[0];
-                  let maxLength = messages[bestId].msg_name.length;
-                  
-                  // Find the message with the longest text
-                  numericKeys.forEach(key => {
-                    const currentLength = messages[key].msg_name.length;
-                    if (currentLength > maxLength) {
-                      maxLength = currentLength;
-                      bestId = key;
-                    }
-                  });
-                  
-                  console.log("Best ID (longest text):", bestId);
-                  console.log("Looking up with key:", String(bestId));
-                  
-                  const bestMsg = messages[String(bestId)];
-                  console.log("Retrieved message:", bestMsg);
-                  
-                  if (bestMsg) {
-                    document.getElementById('bestDoc').innerText = JSON.stringify(bestMsg, null, 2);
-                  } else {
-                    // Try direct access with the key
-                    document.getElementById('bestDoc').innerText = 'Using first key: ' + 
-                      JSON.stringify(messages[messageKeys[0]], null, 2);
-                  }
-                } else {
-                  // If no numeric keys, just use the first key
-                  document.getElementById('bestDoc').innerText = 'Using non-numeric key: ' + 
-                    JSON.stringify(messages[messageKeys[0]], null, 2);
-                }
-              } else {
-                document.getElementById('bestDoc').innerText = 'No message keys found';
-              }
-            } catch (err) {
-              document.getElementById('bestDoc').innerText = 'Error: ' + err.message;
-              console.error("Processing error:", err);
+            // Get the first message (backend should be returning the best match)
+            const firstKey = messageKeys[0];
+            const bestMsg = messages[firstKey];
+            
+            if (bestMsg) {
+              document.getElementById('bestDoc').innerText = 
+                `Best document (ID: ${bestMsg.msg_id}):\n\n${bestMsg.msg_name}`;
+            } else {
+              document.getElementById('bestDoc').innerText = 'Error retrieving document';
             }
           })
           .catch(err => {
-            document.getElementById('bestDoc').innerText = 'Error: ' + err;
             console.error("Fetch error:", err);
+            document.getElementById('bestDoc').innerText = 'Error fetching data';
           });
       });
 
