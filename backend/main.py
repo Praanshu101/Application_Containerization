@@ -13,7 +13,7 @@ app = FastAPI()
 import time
 #from elasticsearch import Elasticsearch
 
-ELASTICSEARCH_URL = "http://elasticsearch:9567"
+ELASTICSEARCH_URL = "http://10.190.0.2:9567"
 
 for _ in range(30):  # Retry up to 10 times
     try:

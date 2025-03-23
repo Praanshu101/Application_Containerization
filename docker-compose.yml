@@ -17,12 +17,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 1
-  frontend:
-    build: ./frontend
-    ports:
-      - "9567:9567"  # Only frontend is exposed to the host
-    networks:
-      - my_network
 
   backend:
     build: ./backend

@@ -15,7 +15,7 @@ def read_root():
     return RedirectResponse(url="/static/index.html")
 
 # Backend URL (assuming container network setup)
-BACKEND_URL = "http://backend:9567"
+BACKEND_URL = "http://10.190.0.2:9567"
 
 # Route for retrieving the best-scoring document
 @app.get("/get")
