@@ -1,16 +1,15 @@
 version: '3'
 networks:
-  my_network:  # Define a custom network
+  my_network:
     driver: bridge
 
 services:
-
   elasticsearch:
     build: ./elasticsearch
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    expose:
-      - "9567"  # Not accessible from host
+    ports:
+      - "9567:9567"  # Accessible from host
     networks:
       - my_network
     healthcheck:
@@ -21,8 +20,8 @@ services:
 
   backend:
     build: ./backend
-    expose:
-      - "9567"  # Not accessible from host, only inside Docker
+    ports:
+      - "9567:9567"  # Accessible from host
     networks:
       - my_network
     depends_on:
