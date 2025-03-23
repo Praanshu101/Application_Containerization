@@ -1,3 +1,4 @@
+version: '3'
 networks:
   my_network:  # Define a custom network
     driver: bridge
