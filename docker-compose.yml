@@ -9,7 +9,7 @@ services:
     volumes:
       - esdata:/usr/share/elasticsearch/data
     ports:
-      - "9567"  # Accessible from host
+      - "9567:9567"  # Accessible from host
     networks:
       - my_network
     healthcheck:
@@ -22,7 +22,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "9567:80"  # Accessible from hostß
+      - "80:9567"  # Accessible from hostß
     networks:
       - my_network
     depends_on:
