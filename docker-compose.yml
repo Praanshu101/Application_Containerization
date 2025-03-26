@@ -1,4 +1,4 @@
-version: '3'
+version: '2.3'
 networks:
   my_network:
     driver: bridge
@@ -22,7 +22,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "9567:9567"  # Accessible from hostß
+      - "9567:80"  # Accessible from hostß
     networks:
       - my_network
     depends_on:
