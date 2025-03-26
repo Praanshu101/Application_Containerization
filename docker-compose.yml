@@ -13,10 +13,11 @@ services:
     networks:
       - my_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9567/_cat/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:9567/"]
       interval: 10s
-      timeout: 5s
-      retries: 1
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   backend:
     build: ./backend
