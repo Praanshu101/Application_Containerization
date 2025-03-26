@@ -25,7 +25,9 @@ services:
     networks:
       - my_network
     depends_on:
-      - elasticsearch
+        elasticsearch:
+          condition: service_healthy
+
 
 volumes:
   esdata:
