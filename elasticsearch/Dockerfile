@@ -7,6 +7,6 @@ ENV ES_JAVA_OPTS="-Xms512m -Xmx512m"
 # Copy custom config (if needed)
 COPY elasticsearch.yml /usr/share/elasticsearch/config/elasticsearch.yml
 
-EXPOSE 9567  
+EXPOSE 92000 9300
 
 # Only accessible inside Docker network
