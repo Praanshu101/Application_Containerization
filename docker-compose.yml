@@ -17,7 +17,7 @@ services:
 
 
   fastapi:
-    build: .
+    build: ./backend
     container_name: fastapi2
     depends_on:
       elasticsearch:

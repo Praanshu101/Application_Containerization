@@ -188,4 +188,4 @@ def es_status():
         return {"status": "error", "message": str(e)}
 
 # Mount the static folder for frontend
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+# app.mount("/", StaticFiles(directory="static", html=True), name="static")
