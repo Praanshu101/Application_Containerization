@@ -2,16 +2,12 @@ version: "3.8"
 
 services:
   elasticsearch:
-    build:
-      context: ./elasticsearch
-      dockerfile: Dockerfile
+    build: ./elasticsearch
     ports:
-      - "9200:9200"       # Changed host port to 9200
+      - "9200:9200"
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 30s
@@ -20,17 +16,14 @@ services:
     restart: always
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
-      - "8000:8000"       # Backend mapping remains the same
+      - "8000:8000"
     depends_on:
       elasticsearch:
         condition: service_healthy
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9567
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     restart: always
 
-volumes:
-  esdata:
+# No custom network needed; both services will use the default network.
