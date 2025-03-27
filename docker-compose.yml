@@ -1,40 +1,34 @@
-version: '2.3'
-networks:
-  my_network:
-    driver: bridge
-
+version: '3'
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=false
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200"  # Accessible from host
+      - "9200:9200"
     networks:
-      - my_network
+      - mynetwork
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 3s
+      retries: 10
 
-  backend:
-    build: ./backend
-    ports:
-      - "9567:9567"  # Accessible from host
-    networks:
-      - my_network
+
+  fastapi:
+    build: .
+    container_name: fastapi2
     depends_on:
       elasticsearch:
         condition: service_healthy
     environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ES_HOST=http://elasticsearch:9200
+    networks:
+      - mynetwork
+    ports:
+      - "9567:9567"
 
-volumes:
-  esdata:
-  
+networks:
+  mynetwork:
+    driver: bridge
