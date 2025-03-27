@@ -1,5 +1,5 @@
 network.host: 0.0.0.0
 http.port: 9200
 discovery.type: single-node
-xpack.security.enabled: false  # Disable security for simplicity
+xpack.security.enabled: false  
 ingest.geoip.downloader.enabled: false

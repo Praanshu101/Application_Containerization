@@ -19,7 +19,6 @@
     </div>
 
     <script>
-      // Add this at the top of your script section
       console.log("Frontend loaded, checking backend connection...");
       fetch("/check-backend")
         .then((response) => response.json())
@@ -35,14 +34,14 @@
             ? `/get?query=${encodeURIComponent(query)}`
             : "/get"; // Make query optional
 
-          console.log("Fetching from:", url); // Debug which URL we're using
+          console.log("Fetching from:", url); // For debugging
 
           fetch(url)
             .then((response) => response.json())
             .then((data) => {
-              console.log("Received data:", data); // Debug what we received
+              console.log("Received data:", data); // For debugging
 
-              // Check if we have messages in the correct format
+              // Checking if messages in the correct format
               const messages = data.messages || {};
               const messageKeys = Object.keys(messages);
 
