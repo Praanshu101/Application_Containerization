@@ -8,7 +8,7 @@ import time
 
 app = FastAPI()
 
-ELASTICSEARCH_URL = "http://elasticsearch:9567"
+ELASTICSEARCH_URL = "http://localhost:9200"  
 
 for _ in range(30):  # Retry up to 30 times
     try:
