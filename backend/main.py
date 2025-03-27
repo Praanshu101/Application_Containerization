@@ -30,6 +30,7 @@ app.add_middleware(
 # Get Elasticsearch URL and timeout from environment variables
 ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:9200")
 ELASTICSEARCH_TIMEOUT = int(os.environ.get("ELASTICSEARCH_TIMEOUT", "30"))
+ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://elasticsearch:9200')
 
 # Health check endpoint
 @app.get("/health")
@@ -49,35 +50,40 @@ def es_status():
         raise HTTPException(status_code=503, detail=f"Error connecting to Elasticsearch: {str(e)}")
 
 # Improved connection handling
-def connect_to_elasticsearch():
-    max_retries = 5  # Start with fewer retries since we're using healthchecks
-    retry_interval = 10
+
+def create_elasticsearch_client(max_retries=30, retry_delay=5):
+    """
+    Create an Elasticsearch client with robust connection handling
     
-    logger.info(f"Attempting to connect to Elasticsearch at {ELASTICSEARCH_URL}")
+    Args:
+        max_retries (int): Number of connection attempts
+        retry_delay (int): Seconds between retry attempts
     
+    Returns:
+        Elasticsearch client or raises ValueError
+    """
     for attempt in range(max_retries):
         try:
-            es = Elasticsearch([ELASTICSEARCH_URL], timeout=ELASTICSEARCH_TIMEOUT)
-            if es.ping():
-                logger.info(f"Successfully connected to Elasticsearch after {attempt+1} attempts")
+            print(f"Attempting Elasticsearch connection (Attempt {attempt + 1})...")
+            es = Elasticsearch([ELASTICSEARCH_URL], 
+                               connection_attempts=3, 
+                               retry_on_timeout=True)
+            
+            # More comprehensive health check
+            health = es.cluster.health(wait_for_status='yellow', timeout='30s')
+            
+            if health['status'] in ['green', 'yellow']:
+                print(f"Successfully connected to Elasticsearch. Cluster status: {health['status']}")
                 return es
-            else:
-                logger.warning("Elasticsearch ping failed")
-        except ConnectionTimeout:
-            logger.warning(f"Connection timeout on attempt {attempt+1}/{max_retries}")
-        except ConnectionError as e:
-            logger.warning(f"Connection error on attempt {attempt+1}/{max_retries}: {str(e)}")
+            
         except Exception as e:
-            logger.warning(f"Connection attempt {attempt+1}/{max_retries} failed: {str(e)}")
-        
-        if attempt < max_retries - 1:  # Don't sleep on the last attempt
-            logger.info(f"Waiting {retry_interval} seconds before next attempt...")
-            time.sleep(retry_interval)
+            print(f"Connection attempt failed: {e}")
+            time.sleep(retry_delay)
     
-    logger.error(f"Failed to connect to Elasticsearch after {max_retries} attempts")
-    raise ValueError(f"Could not connect to Elasticsearch at {ELASTICSEARCH_URL} after {max_retries} attempts")
+    raise ValueError("Could not establish connection to Elasticsearch after maximum retries")
 
-# Lazy initialization pattern for elasticsearch
+# Use this function when initializing your Elasticsearch client
+es = create_elasticsearch_client()
 _es_client = None
 
 def get_es_client():

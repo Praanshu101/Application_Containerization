@@ -1,74 +1,39 @@
-version: "3.8"
+version: '2.3'
+networks:
+  my_network:
+    driver: bridge
 
 services:
   elasticsearch:
-    build: ./elasticsearch
-    ports:
-      - "9200:9200"
-      - "9300:9300"  # Add cluster communication port
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
     environment:
       - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      # Disable security features for development
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=false
-      # Set network host to allow connections
-      - network.host=0.0.0.0
-      # Make sure these are set properly
-      - http.port=9200
-      - transport.port=9300
-      - bootstrap.memory_lock=true
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    restart: always
-    networks:
-      - app-network
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"  # Accessible from host
+    networks:
+      - my_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:9200/_cluster/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - ELASTICSEARCH_TIMEOUT=30  # Increase timeout
+      - "9567:9567"  # Accessible from host
     networks:
-      - app-network
+      - my_network
     depends_on:
       elasticsearch:
         condition: service_healthy
-    restart: on-failure:5
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "9567:9567"
     environment:
-      - BACKEND_URL=http://backend:8000
-    networks:
-      - app-network
-    depends_on:
-      - backend
-    restart: on-failure
-    
-volumes:
-  es_data:
-    driver: local
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
 
-networks:
-  app-network:
-    driver: bridge
+volumes:
+  esdata:
