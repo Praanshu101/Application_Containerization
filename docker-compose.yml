@@ -1,40 +1,36 @@
-networks:
-  my_network:  # Define a custom network
-    driver: bridge
+version: "3.8"
 
 services:
-
   elasticsearch:
-    build: ./elasticsearch
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    ports:
+      - "9200:9567"       # Changed host port to 9200
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    expose:
-      - "9567"  # Not accessible from host
-    networks:
-      - my_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9567/_cat/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 1
-  frontend:
-    build: ./frontend
-    ports:
-      - "9567:9567"  # Only frontend is exposed to the host
-    networks:
-      - my_network
+      test: ["CMD", "curl", "-f", "http://localhost:9567"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
 
   backend:
-    build: ./backend
-    expose:
-      - "9567"  # Not accessible from host, only inside Docker
-    networks:
-      - my_network
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:9567"       # Backend mapping remains the same
     depends_on:
       elasticsearch:
         condition: service_healthy
-
-
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9567
+    restart: always
 
 volumes:
   esdata:
