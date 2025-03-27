@@ -13,7 +13,7 @@ app = FastAPI()
 import time
 #from elasticsearch import Elasticsearch
 
-ELASTICSEARCH_URL = "http://elasticsearch:9567"
+ELASTICSEARCH_URL = "http://elasticsearch:9200"
 
 for _ in range(30):  # Retry up to 10 times
     try:
@@ -191,4 +191,4 @@ def es_status():
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 import uvicorn
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9567)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

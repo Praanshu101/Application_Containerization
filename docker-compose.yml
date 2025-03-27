@@ -6,14 +6,14 @@ services:
       context: ./elasticsearch
       dockerfile: Dockerfile
     ports:
-      - "9200:9567"       # Changed host port to 9200
+      - "9200:9200"       # Changed host port to 9200
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - esdata:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9567"]
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 30s
       timeout: 10s
       retries: 5
