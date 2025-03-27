@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 import requests
 from typing import Optional
+import os
 
 app = FastAPI()
 
@@ -14,8 +15,8 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 def read_root():
     return RedirectResponse(url="/static/index.html")
 
-# Backend URL (assuming container network setup)
-BACKEND_URL = "http://backend:9567"
+# Get backend URL from environment variable or use default
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://backend:8000")
 
 # Route for retrieving the best-scoring document
 @app.get("/get")

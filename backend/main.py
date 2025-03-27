@@ -4,33 +4,49 @@ from elasticsearch import Elasticsearch
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from typing import Optional
+import os
+import time
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Connect to Elasticsearch inside Docker
-#es = Elasticsearch("http://elasticsearch:9567")
+# Get Elasticsearch URL from environment variable or use default
+ELASTICSEARCH_URL = os.environ.get("ELASTICSEARCH_URL", "http://elasticsearch:9200")
 
-import time
-#from elasticsearch import Elasticsearch
+# Improved connection handling
+def connect_to_elasticsearch():
+    max_retries = 30
+    retry_interval = 5
+    
+    logger.info(f"Attempting to connect to Elasticsearch at {ELASTICSEARCH_URL}")
+    
+    for attempt in range(max_retries):
+        try:
+            es = Elasticsearch([ELASTICSEARCH_URL])
+            if es.ping():
+                logger.info(f"Successfully connected to Elasticsearch after {attempt+1} attempts")
+                return es
+        except Exception as e:
+            logger.warning(f"Connection attempt {attempt+1}/{max_retries} failed: {str(e)}")
+            if attempt < max_retries - 1:  # Don't sleep on the last attempt
+                logger.info(f"Waiting {retry_interval} seconds before next attempt...")
+                time.sleep(retry_interval)
+    
+    logger.error(f"Failed to connect to Elasticsearch after {max_retries} attempts")
+    raise ValueError(f"Could not connect to Elasticsearch at {ELASTICSEARCH_URL} after {max_retries} attempts")
 
-ELASTICSEARCH_URL = "http://elasticsearch:9200"
-
-for _ in range(30):  # Retry up to 10 times
-    try:
-        es = Elasticsearch([ELASTICSEARCH_URL])
-        if es.ping():
-            print("Connected to Elasticsearch")
-            break
-    except Exception as e:
-        print("Retrying Elasticsearch connection...")
-        time.sleep(5)
-else:
-    raise ValueError("Elasticsearch is not available")
+# Attempt to connect to Elasticsearch
+es = connect_to_elasticsearch()
 
 INDEX_NAME = "documents"
 
 # Ensure the index exists
 if not es.indices.exists(index=INDEX_NAME):  
+    logger.info(f"Creating index '{INDEX_NAME}'")
     es.indices.create(index=INDEX_NAME, body={
         "mappings": {
             "properties": {
