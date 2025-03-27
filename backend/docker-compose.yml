@@ -11,10 +11,11 @@ services:
     networks:
       - mynetwork
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:9567/_cluster/health || exit 1"]
       interval: 3s
       retries: 10
-
+    volumes:
+      - root_esdata:/usr/share/elasticsearch/data
 
   fastapi:
     build: ./backend
@@ -23,12 +24,15 @@ services:
       elasticsearch:
         condition: service_healthy
     environment:
-      - ES_HOST=http://elasticsearch:9200
+      - ES_HOST=http://elasticsearch:9567
     networks:
       - mynetwork
     ports:
       - "9567:9567"
-
+      
 networks:
   mynetwork:
     driver: bridge
+
+volumes:
+  root_esdata:

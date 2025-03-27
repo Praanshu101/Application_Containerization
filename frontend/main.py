@@ -15,14 +15,13 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 def read_root():
     return RedirectResponse(url="/static/index.html")
 
-# Get backend URL from environment variable or use default
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://backend:8000")
+BACKEND_URL = "http://10.190.0.2:9567"
 
 # Route for retrieving the best-scoring document
 @app.get("/get")
 def get_best_document(query: Optional[str] = None):
     try:
-        # Pass query parameter to backend if it exists
+        # Passing query parameter to backend
         if query:
             print(f"Sending query to backend: '{query}'")
             response = requests.get(f"{BACKEND_URL}/get?query={query}")
@@ -33,7 +32,7 @@ def get_best_document(query: Optional[str] = None):
         response.raise_for_status()
         data = response.json()
         
-        # Add debugging to see the actual response
+        # Adding debugging to see the actual response
         print(f"Backend response contains {len(data.get('messages', {}))} documents")
         
         # Return directly to ensure proper structure
@@ -56,7 +55,7 @@ def insert_document(text: str):
 def check_backend():
     """Diagnostic endpoint to check backend connectivity"""
     try:
-        # Try all possible endpoints
+        # Trying all possible endpoints
         results = {}
         endpoints = ["/messages", "/get", "/es-status"]
         

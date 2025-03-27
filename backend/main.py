@@ -4,18 +4,13 @@ from elasticsearch import Elasticsearch
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
 from typing import Optional
+import time
 
 app = FastAPI()
 
-# Connect to Elasticsearch inside Docker
-#es = Elasticsearch("http://elasticsearch:9567")
-
-import time
-#from elasticsearch import Elasticsearch
-
 ELASTICSEARCH_URL = "http://elasticsearch:9567"
 
-for _ in range(30):  # Retry up to 10 times
+for _ in range(30):  # Retry up to 30 times
     try:
         es = Elasticsearch([ELASTICSEARCH_URL])
         if es.ping():
@@ -54,29 +49,6 @@ for doc in docs:
 # Pydantic model for inserting a document
 class Document(BaseModel):
     text: str
-
-
-
-
-
-@app.get("/search/")
-def search(query: str):
-    """Search for documents in Elasticsearch"""
-    result = es.search(index=INDEX_NAME, body={
-        "query": {
-            "match": {"text": query}
-        }
-    })
-    
-    # Format the response to match frontend expectations
-    messages = {}
-    for hit in result["hits"]["hits"]:
-        doc = hit["_source"]
-        doc_id = doc.get("id", hit["_id"])
-        messages[doc_id] = {"msg_id": int(doc_id), "msg_name": doc["text"]}
-    
-    return {"messages": messages}
-
 
 @app.post("/insert/")
 def insert_document(doc: Document):
@@ -135,8 +107,3 @@ def get_documents(query: Optional[str] = None):
     except Exception as e:
         print(f"Error in get_documents: {str(e)}")
         return {"messages": {}, "error": str(e)}
-
-
-
-# Mount the static folder for frontend
-# app.mount("/", StaticFiles(directory="static", html=True), name="static")
