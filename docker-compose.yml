@@ -24,7 +24,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:9567"       # Backend mapping remains the same
+      - "8000:8000"       # Backend mapping remains the same
     depends_on:
       elasticsearch:
         condition: service_healthy

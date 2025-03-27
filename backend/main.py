@@ -189,3 +189,6 @@ def es_status():
 
 # Mount the static folder for frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+import uvicorn
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=9567)
