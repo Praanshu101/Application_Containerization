@@ -55,43 +55,8 @@ for doc in docs:
 class Document(BaseModel):
     text: str
 
-@app.get("/messages")
-def get_messages():
-    """Return all documents to match frontend expectations"""
-    try:
-        result = es.search(index=INDEX_NAME, body={
-            "query": {"match_all": {}}
-        })
-        
-        messages = {}
-        for hit in result["hits"]["hits"]:
-            doc = hit["_source"]
-            # Use get() with fallback to avoid KeyError
-            doc_id = doc.get("id", hit["_id"])
-            try:
-                # Convert to int safely
-                msg_id = int(doc_id)
-            except ValueError:
-                # Fallback if ID can't be converted to int
-                msg_id = 0
-                
-            messages[doc_id] = {"msg_id": msg_id, "msg_name": doc["text"]}
-        
-        # Debugging - log what we're returning
-        print(f"Returning messages: {messages}")
-        return {"messages": messages}
-    except Exception as e:
-        # Log the error and return empty result
-        print(f"Error in get_messages: {str(e)}")
-        return {"messages": {}, "error": str(e)}
 
-@app.post("/messages/{text}/")
-def add_message(text: str):
-    """Insert a message from URL path parameter to match frontend expectations"""
-    result = es.index(index=INDEX_NAME, body={"text": text})
-    new_id = result["_id"]
-    new_doc = {"id": new_id, "text": text}
-    return {"status": "Inserted", "document": new_doc}
+
 
 
 @app.get("/search/")
@@ -171,21 +136,7 @@ def get_documents(query: Optional[str] = None):
         print(f"Error in get_documents: {str(e)}")
         return {"messages": {}, "error": str(e)}
 
-@app.get("/es-status")
-def es_status():
-    """Check Elasticsearch connection status"""
-    try:
-        health = es.cluster.health()
-        indices = es.cat.indices(format="json")
-        doc_count = es.count(index=INDEX_NAME)
-        return {
-            "status": "connected",
-            "health": health,
-            "indices": indices,
-            "document_count": doc_count
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+
 
 # Mount the static folder for frontend
 # app.mount("/", StaticFiles(directory="static", html=True), name="static")
